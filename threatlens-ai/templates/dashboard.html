@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Security Dashboard — ThreatLens AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Cybersecurity Threat Intelligence Dashboard</h1>
+            <p class="page-subtitle">Consolidated security posture, risk distributions, and historical assessment records</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('index') }}" class="btn-primary">
+                <span>⚡</span> Run New Assessment
+            </a>
+        </div>
+    </div>
+
+    <!-- Aggregate Stat Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue">🌐</div>
+            <div class="stat-content">
+                <span class="stat-value">{{ metrics.total_assessments }}</span>
+                <span class="stat-label">Total Websites Assessed</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-cyan">🛡️</div>
+            <div class="stat-content">
+                <span class="stat-value">{{ metrics.avg_security_score }}<small>/100</small></span>
+                <span class="stat-label">Average Security Score</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-red">🚨</div>
+            <div class="stat-content">
+                <span class="stat-value stat-critical">{{ metrics.critical_threats }}</span>
+                <span class="stat-label">Critical Severity Threats</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-orange">⚠️</div>
+            <div class="stat-content">
+                <span class="stat-value stat-high">{{ metrics.high_threats }}</span>
+                <span class="stat-label">High Severity Threats</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-green">✓</div>
+            <div class="stat-content">
+                <span class="stat-value stat-pass">{{ metrics.checks_passed }}</span>
+                <span class="stat-label">Checks Passed</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-yellow">⚑</div>
+            <div class="stat-content">
+                <span class="stat-value stat-warning">{{ metrics.checks_requiring_attention }}</span>
+                <span class="stat-label">Checks Needing Attention</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts Grid -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Risk Severity Breakdown</h3>
+                <span class="chart-badge">Likelihood × Impact</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="riskDistributionChart"></canvas>
+            </div>
+            <div class="chart-legend-custom">
+                <span class="legend-item"><span class="dot dot-critical"></span> Critical (17-25): {{ metrics.critical_threats }}</span>
+                <span class="legend-item"><span class="dot dot-high"></span> High (10-16): {{ metrics.high_threats }}</span>
+                <span class="legend-item"><span class="dot dot-medium"></span> Medium (5-9): {{ metrics.medium_threats }}</span>
+                <span class="legend-item"><span class="dot dot-low"></span> Low (1-4): {{ metrics.low_threats }}</span>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Threats by STRIDE Category</h3>
+                <span class="chart-badge">Microsoft STRIDE Model</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="strideDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Assessments Table -->
+    <div class="table-card">
+        <div class="table-header">
+            <div>
+                <h3>Recent Security Assessments</h3>
+                <p class="table-subtitle">Summary of recent website configuration scans stored in local SQLite database</p>
+            </div>
+            <a href="{{ url_for('history') }}" class="btn-secondary btn-sm">View Full History →</a>
+        </div>
+
+        {% if metrics.recent_assessments %}
+            <div class="table-responsive">
+                <table class="cyber-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Target Hostname</th>
+                            <th>Assessment Timestamp</th>
+                            <th>Security Score</th>
+                            <th>Risk Distribution</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in metrics.recent_assessments %}
+                            <tr>
+                                <td class="mono-text">TL-{{ "%03d"|format(item.id) }}</td>
+                                <td>
+                                    <div class="target-host-cell">
+                                        <span class="host-name">{{ item.hostname }}</span>
+                                        <span class="host-url mono-text">{{ item.target_url }}</span>
+                                    </div>
+                                </td>
+                                <td class="date-cell">{{ item.scan_timestamp[:19].replace('T', ' ') }} UTC</td>
+                                <td>
+                                    <span class="score-badge {% if item.overall_score >= 80 %}score-high{% elif item.overall_score >= 50 %}score-mid{% else %}score-low{% endif %}">
+                                        {{ item.overall_score }}/100
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="mini-risk-badges">
+                                        {% if item.risk_summary.critical %}
+                                            <span class="badge-mini badge-critical" title="Critical Threats">{{ item.risk_summary.critical }} Crit</span>
+                                        {% endif %}
+                                        {% if item.risk_summary.high %}
+                                            <span class="badge-mini badge-high" title="High Threats">{{ item.risk_summary.high }} High</span>
+                                        {% endif %}
+                                        {% if item.risk_summary.medium %}
+                                            <span class="badge-mini badge-medium" title="Medium Threats">{{ item.risk_summary.medium }} Med</span>
+                                        {% endif %}
+                                        {% if item.risk_summary.low %}
+                                            <span class="badge-mini badge-low" title="Low Threats">{{ item.risk_summary.low }} Low</span>
+                                        {% endif %}
+                                        {% if not item.risk_summary.critical and not item.risk_summary.high and not item.risk_summary.medium and not item.risk_summary.low %}
+                                            <span class="badge-mini badge-pass">Zero Active Threats</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="action-btn-group">
+                                        <a href="{{ url_for('results', assessment_id=item.id) }}" class="btn-action" title="View Detailed Findings & STRIDE Threats">
+                                            🔍 Results
+                                        </a>
+                                        <a href="{{ url_for('report', assessment_id=item.id) }}" class="btn-action" title="View Executive Security Report">
+                                            📑 Report
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🛡️</div>
+                <h3>No Assessments Recorded Yet</h3>
+                <p>Run your first passive website security scan or load a sample demonstration profile to view live analytics.</p>
+                <div class="empty-actions">
+                    <a href="{{ url_for('index') }}" class="btn-primary">Scan a Target</a>
+                    <a href="{{ url_for('load_sample', profile='vulnerable') }}" class="btn-secondary">Load Sample Demo</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Risk Severity Distribution Donut Chart
+    const riskCtx = document.getElementById("riskDistributionChart");
+    if (riskCtx) {
+        new Chart(riskCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical (17-25)', 'High (10-16)', 'Medium (5-9)', 'Low (1-4)'],
+                datasets: [{
+                    data: [
+                        {{ metrics.critical_threats }},
+                        {{ metrics.high_threats }},
+                        {{ metrics.medium_threats }},
+                        {{ metrics.low_threats }}
+                    ],
+                    backgroundColor: [
+                        '#ef4444', // Critical red
+                        '#f97316', // High orange
+                        '#f59e0b', // Medium amber
+                        '#10b981'  // Low green
+                    ],
+                    borderColor: '#0f172a',
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                cutout: '68%'
+            }
+        });
+    }
+
+    // 2. STRIDE Category Horizontal Bar Chart
+    const strideCtx = document.getElementById("strideDistributionChart");
+    if (strideCtx) {
+        const strideData = {{ metrics.stride_distribution | tojson }};
+        const labels = Object.keys(strideData);
+        const values = Object.values(strideData);
+
+        new Chart(strideCtx, {
+            type: 'bar',
+            data: {
+                labels: labels.length ? labels : ['Spoofing', 'Tampering', 'Repudiation', 'Info Disclosure', 'DoS', 'Elevation of Privilege'],
+                datasets: [{
+                    label: 'Threat Count',
+                    data: labels.length ? values : [0, 0, 0, 0, 0, 0],
+                    backgroundColor: [
+                        '#38bdf8', '#818cf8', '#ec4899', '#06b6d4', '#f59e0b', '#a855f7'
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, color: '#94a3b8' },
+                        grid: { color: '#1e293b' }
+                    },
+                    y: {
+                        ticks: { color: '#e2e8f0', font: { family: 'Inter', weight: 500 } },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

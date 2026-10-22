@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local database journal files (keep starter db if present, or ignore journal)
+*.db-journal
+*.sqlite3-journal
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo

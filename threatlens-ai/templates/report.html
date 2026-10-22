@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Security Report — {{ assessment.hostname }} | ThreatLens AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="report-body">
+    <!-- Non-printable Toolbar -->
+    <div class="report-toolbar no-print">
+        <div class="toolbar-container">
+            <a href="{{ url_for('results', assessment_id=assessment.id) }}" class="btn-toolbar">
+                ← Back to Results
+            </a>
+            <div class="toolbar-title">
+                Executive Security Risk Assessment Report — <strong>{{ assessment.hostname }}</strong>
+            </div>
+            <div class="toolbar-actions">
+                <button type="button" class="btn-toolbar-primary" onclick="window.print()">
+                    🖨️ Print / Save as PDF
+                </button>
+                <a href="{{ url_for('export_pdf', assessment_id=assessment.id) }}" class="btn-toolbar-secondary">
+                    📥 Download PDF File
+                </a>
+                <a href="{{ url_for('export_json', assessment_id=assessment.id) }}" class="btn-toolbar-secondary">
+                    { } JSON
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable Report Document Container -->
+    <div class="report-document">
+        <!-- Document Cover / Header -->
+        <header class="report-header">
+            <div class="report-brand">
+                <span class="report-shield">🛡️</span>
+                <div>
+                    <h1 class="report-main-title">ThreatLens AI</h1>
+                    <span class="report-sub-title">Website Security Risk Assessment & Threat Modeling Tool</span>
+                </div>
+            </div>
+            <div class="report-meta-box">
+                <div class="report-meta-item">
+                    <span class="meta-lbl">Report Ref:</span>
+                    <span class="meta-val mono-text">TL-REP-{{ "%04d"|format(assessment.id) }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <span class="meta-lbl">Date of Assessment:</span>
+                    <span class="meta-val">{{ assessment.scan_timestamp[:19].replace('T', ' ') }} UTC</span>
+                </div>
+                <div class="report-meta-item">
+                    <span class="meta-lbl">Target Hostname:</span>
+                    <span class="meta-val mono-text">{{ assessment.hostname }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <span class="meta-lbl">Hygiene Score:</span>
+                    <span class="meta-val score-highlight">{{ assessment.overall_score }}/100</span>
+                </div>
+            </div>
+        </header>
+
+        <hr class="report-divider">
+
+        <!-- 1. Assessment Date and Target Hostname -->
+        <section class="report-section">
+            <h2 class="section-num-title">1. Assessment Metadata & Target Specifications</h2>
+            <div class="spec-table-wrapper">
+                <table class="report-table">
+                    <tbody>
+                        <tr>
+                            <td class="table-lbl">Target URL</td>
+                            <td class="mono-text">{{ assessment.target_url }}</td>
+                            <td class="table-lbl">Target Hostname</td>
+                            <td class="mono-text">{{ assessment.hostname }}</td>
+                        </tr>
+                        <tr>
+                            <td class="table-lbl">Assessment Timestamp</td>
+                            <td>{{ assessment.scan_timestamp }}</td>
+                            <td class="table-lbl">Engine Version</td>
+                            <td>ThreatLens AI v1.0.4 (Passive STRIDE Model)</td>
+                        </tr>
+                        <tr>
+                            <td class="table-lbl">Overall Hygiene Score</td>
+                            <td><strong>{{ assessment.overall_score }}/100</strong></td>
+                            <td class="table-lbl">Evaluated Checks</td>
+                            <td>{{ assessment.checks_summary.total }} Total ({{ assessment.checks_summary.passed }} Pass, {{ assessment.checks_summary.warning }} Warning, {{ assessment.checks_summary.failed }} Fail)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 2. Scope and Limitations -->
+        <section class="report-section">
+            <h2 class="section-num-title">2. Scope, Ethical Authorization & Limitations</h2>
+            <p>
+                This assessment was conducted exclusively within the bounds of passive, publicly observable configuration auditing.
+                Under this methodology, the tool transmits ordinary, non-intrusive HTTP/TLS requests to inspect returned server headers,
+                certificate chains, and static HTML structure.
+            </p>
+            <div class="callout-box">
+                <strong>Explicit Boundaries & Operational Constraints:</strong>
+                <ul>
+                    <li><strong>No Exploitation:</strong> Zero payloads, exploit scripts, fuzzing, or vulnerability exploitation routines were executed.</li>
+                    <li><strong>No Brute-Force:</strong> No directory brute-forcing, credential stuffing, or denial-of-service tests were performed.</li>
+                    <li><strong>SSRF Immune:</strong> Requests targeting loopbacks (127.0.0.1, ::1), private subnets (RFC 1918), link-local addresses, and cloud metadata (169.254.169.254) are rejected by architectural design.</li>
+                    <li><strong>Static Server-Side Visibility:</strong> Client-side dynamic resources executed solely via JavaScript cannot be observed during passive inspection.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 3. Executive Summary -->
+        <section class="report-section">
+            <h2 class="section-num-title">3. Executive Summary</h2>
+            <div class="exec-summary-box">
+                <p>{{ assessment.executive_summary | replace('\n\n', '<br><br>') | safe }}</p>
+            </div>
+
+            <!-- Scorecard Cards -->
+            <div class="scorecard-grid">
+                <div class="scorecard-item">
+                    <span class="sc-title">Security Hygiene Score</span>
+                    <span class="sc-val">{{ assessment.overall_score }}/100</span>
+                    <span class="sc-sub">Composite Weight</span>
+                </div>
+                <div class="scorecard-item">
+                    <span class="sc-title">Critical Threats</span>
+                    <span class="sc-val text-crit">{{ assessment.risk_summary.critical or 0 }}</span>
+                    <span class="sc-sub">Score ≥ 17</span>
+                </div>
+                <div class="scorecard-item">
+                    <span class="sc-title">High Threats</span>
+                    <span class="sc-val text-high">{{ assessment.risk_summary.high or 0 }}</span>
+                    <span class="sc-sub">Score 10 - 16</span>
+                </div>
+                <div class="scorecard-item">
+                    <span class="sc-title">Medium Threats</span>
+                    <span class="sc-val text-med">{{ assessment.risk_summary.medium or 0 }}</span>
+                    <span class="sc-sub">Score 5 - 9</span>
+                </div>
+                <div class="scorecard-item">
+                    <span class="sc-title">Low Threats</span>
+                    <span class="sc-val text-low">{{ assessment.risk_summary.low or 0 }}</span>
+                    <span class="sc-sub">Score 1 - 4</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Checks Performed -->
+        <section class="report-section">
+            <h2 class="section-num-title">4. Permitted Security Checks Performed</h2>
+            <p>The following automated passive inspection checks were conducted against the target endpoint:</p>
+            <ol class="styled-list">
+                <li><strong>HTTPS Availability & Port 80 Redirection:</strong> Validates port 443 connectivity and verifies whether port 80 enforces automatic HTTP 301 redirection to HTTPS.</li>
+                <li><strong>TLS Certificate & Cryptography:</strong> Inspects certificate validity, trust chain, expiration window, negotiated protocol (TLS 1.2+), and cipher suite.</li>
+                <li><strong>HTTP Security Headers:</strong> Audits Content-Security-Policy (CSP), Strict-Transport-Security (HSTS), X-Content-Type-Options, Frame Protection (X-Frame-Options or CSP frame-ancestors), Referrer-Policy, and Permissions-Policy.</li>
+                <li><strong>Cookie Security Attributes:</strong> Inspects Set-Cookie headers for Secure, HttpOnly, and SameSite attributes (cookie values are discarded and never logged).</li>
+                <li><strong>Information Exposure:</strong> Evaluates Server, X-Powered-By, and framework headers for operating system and version banner disclosure.</li>
+                <li><strong>HTTP Redirect Behavior:</strong> Traces the redirect chain to identify security downgrades (HTTPS to HTTP) or excessive hops.</li>
+                <li><strong>Mixed Content References:</strong> Scans static HTML tags for unencrypted HTTP resource references within HTTPS pages.</li>
+            </ol>
+        </section>
+
+        <!-- 5. Observed Evidence -->
+        <section class="report-section">
+            <h2 class="section-num-title">5. Observed Evidence & Technical Findings</h2>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Code</th>
+                        <th style="width: 28%;">Finding Title</th>
+                        <th style="width: 12%;">Status</th>
+                        <th style="width: 48%;">Observed Evidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in assessment.findings %}
+                        <tr>
+                            <td class="mono-text">{{ f.finding_code }}</td>
+                            <td><strong>{{ f.title }}</strong><br><small class="text-muted">{{ f.category }}</small></td>
+                            <td>
+                                <span class="report-badge badge-{{ f.status.lower() }}">{{ f.status }}</span>
+                            </td>
+                            <td class="evidence-cell mono-text">{{ f.evidence }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 6. Findings Categorized by Severity -->
+        <section class="report-section page-break">
+            <h2 class="section-num-title">6. Findings Categorized by Severity</h2>
+            <div class="findings-by-severity">
+                {% set severities = ['Critical', 'High', 'Medium', 'Low'] %}
+                {% for sev in severities %}
+                    {% set matching_findings = assessment.findings | selectattr('severity', 'equalto', sev) | list %}
+                    {% if matching_findings %}
+                        <div class="sev-group">
+                            <h3 class="sev-heading sev-title-{{ sev.lower() }}">
+                                {{ sev }} Severity Findings ({{ matching_findings|length }})
+                            </h3>
+                            <ul class="sev-findings-list">
+                                {% for item in matching_findings %}
+                                    <li>
+                                        <strong>[{{ item.finding_code }}] {{ item.title }}</strong> — Status: <em>{{ item.status }}</em><br>
+                                        <span>{{ item.description }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- 7. Threat Scenarios (STRIDE) -->
+        <section class="report-section">
+            <h2 class="section-num-title">7. STRIDE Threat Model Scenarios & Attack Vectors</h2>
+            <p>
+                Findings requiring remediation were mapped into the Microsoft STRIDE threat classification model.
+                All attack scenarios reflect <em>hypothetical threat vectors</em> derived from observable configuration gaps.
+            </p>
+
+            {% if assessment.threat_scenarios %}
+                <div class="threat-report-cards">
+                    {% for t in assessment.threat_scenarios %}
+                        <div class="threat-report-card">
+                            <div class="threat-card-head">
+                                <div>
+                                    <span class="threat-ref mono-text">[{{ t.threat_id }}]</span>
+                                    <strong class="threat-card-title">{{ t.title }}</strong>
+                                </div>
+                                <div>
+                                    <span class="stride-tag">{{ t.threat_category }}</span>
+                                    <span class="risk-score-tag">Risk: {{ t.risk_score }}/25 ({{ t.severity }})</span>
+                                </div>
+                            </div>
+                            <div class="threat-card-content">
+                                <p><strong>Potential Attack Scenario:</strong> {{ t.attack_scenario }}</p>
+                                <p><strong>Risk Rationale:</strong> Likelihood: {{ t.likelihood }}/5 | Impact: {{ t.impact }}/5. {{ t.rationale }}</p>
+                                <p><strong>Affected Security Control:</strong> {{ t.affected_control }} (Ref: {{ t.finding_code }})</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No active threats identified. The target website satisfied all evaluated security checks.</p>
+            {% endif %}
+        </section>
+
+        <!-- 8. Risk-Scoring Methodology -->
+        <section class="report-section">
+            <h2 class="section-num-title">8. Risk-Scoring Methodology</h2>
+            <p>
+                ThreatLens AI employs a transparent, quantitative risk matrix based on industry standards (OWASP Risk Rating and NIST SP 800-30):
+            </p>
+            <div class="formula-box">
+                <span class="formula-text">Risk Score = Likelihood (1 to 5) × Impact (1 to 5)</span>
+            </div>
+            <table class="report-table" style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>Risk Score Range</th>
+                        <th>Severity Level</th>
+                        <th>Operational Meaning</th>
+                        <th>Remediation SLA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="mono-text">17 – 25</td>
+                        <td><span class="report-badge badge-critical">Critical</span></td>
+                        <td>Immediate risk of transport manipulation, total eavesdropping, or severe identity compromise.</td>
+                        <td>Within 24 Hours</td>
+                    </tr>
+                    <tr>
+                        <td class="mono-text">10 – 16</td>
+                        <td><span class="report-badge badge-high">High</span></td>
+                        <td>Significant weakness (e.g. missing CSP, framing unprotected) facilitating injection or clickjacking.</td>
+                        <td>Within 7 Days</td>
+                    </tr>
+                    <tr>
+                        <td class="mono-text">5 – 9</td>
+                        <td><span class="report-badge badge-medium">Medium</span></td>
+                        <td>Missing defense-in-depth header or cookie attribute that reduces resilience under adverse conditions.</td>
+                        <td>Within 30 Days</td>
+                    </tr>
+                    <tr>
+                        <td class="mono-text">1 – 4</td>
+                        <td><span class="report-badge badge-low">Low</span></td>
+                        <td>Minor information disclosure or informational banner indicating reconnaissance data.</td>
+                        <td>Next Maintenance Window</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 9. Recommended Mitigations -->
+        <section class="report-section page-break">
+            <h2 class="section-num-title">9. Recommended Prioritized Mitigations</h2>
+            <div class="mitigation-table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Threat ID</th>
+                            <th style="width: 25%;">Control Area</th>
+                            <th style="width: 60%;">Actionable Mitigation Instruction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in assessment.threat_scenarios %}
+                            <tr>
+                                <td class="mono-text">{{ t.threat_id }}</td>
+                                <td><strong>{{ t.affected_control }}</strong></td>
+                                <td>{{ t.mitigation }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 10. Verification Checklist -->
+        <section class="report-section">
+            <h2 class="section-num-title">10. Verification & Audit Checklist</h2>
+            <p>Security engineers and sysadmins should use this step-by-step checklist to verify that remediations are operational:</p>
+            <div class="checklist-container">
+                {% for t in assessment.threat_scenarios %}
+                    <div class="checklist-item">
+                        <div class="check-box-mock">☐</div>
+                        <div class="check-content">
+                            <strong>{{ t.title }} ({{ t.threat_id }})</strong>
+                            <pre class="verification-code">{{ t.verification_steps }}</pre>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- 11. Conclusion -->
+        <section class="report-section">
+            <h2 class="section-num-title">11. Conclusion & Technical Sign-off</h2>
+            <p>
+                The assessment for <strong>{{ assessment.hostname }}</strong> concluded with an overall Security Hygiene Score of
+                <strong>{{ assessment.overall_score }}/100</strong>.
+                {% if assessment.overall_score >= 80 %}
+                    The application demonstrates strong transport and configuration defense baselines.
+                {% elif assessment.overall_score >= 50 %}
+                    The application exhibits moderate exposure. Deploying missing security headers and hardening session cookies will substantially improve the defense perimeter.
+                {% else %}
+                    The application exhibits critical configuration weaknesses. Immediate transport layer and header remediation is strongly advised.
+                {% endif %}
+            </p>
+            <p class="report-signoff">
+                <em>Report compiled by ThreatLens AI Automated Security Assessment Suite.</em><br>
+                <em>Signature / Assessment Date: {{ assessment.scan_timestamp[:10] }} | Reference: TL-REP-{{ "%04d"|format(assessment.id) }}</em>
+            </p>
+        </section>
+    </div>
+</body>
+</html>

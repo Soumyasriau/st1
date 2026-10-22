@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Results: {{ assessment.hostname }} — ThreatLens AI{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <!-- Header Summary Card -->
+    <div class="result-header-card">
+        <div class="header-left">
+            <div class="header-badge-row">
+                <span class="badge-assessment-id">ID: TL-{{ "%03d"|format(assessment.id) }}</span>
+                <span class="badge-timestamp">Scanned: {{ assessment.scan_timestamp[:19].replace('T', ' ') }} UTC</span>
+            </div>
+            <h1 class="target-title">{{ assessment.hostname }}</h1>
+            <p class="target-url-line">
+                <span class="url-label">Audited URL:</span>
+                <a href="{{ assessment.target_url }}" target="_blank" rel="noopener noreferrer" class="target-link mono-text">
+                    {{ assessment.target_url }} ↗
+                </a>
+            </p>
+        </div>
+
+        <div class="header-right">
+            <div class="score-display-box">
+                <div class="score-circle {% if assessment.overall_score >= 80 %}score-border-high{% elif assessment.overall_score >= 50 %}score-border-mid{% else %}score-border-low{% endif %}">
+                    <span class="score-num">{{ assessment.overall_score }}</span>
+                    <span class="score-denom">/100</span>
+                </div>
+                <div class="score-label-box">
+                    <span class="score-title">Security Hygiene Score</span>
+                    <span class="score-posture">
+                        {% if assessment.overall_score >= 80 %}
+                            Robust Security Posture
+                        {% elif assessment.overall_score >= 50 %}
+                            Moderate Security Baseline
+                        {% else %}
+                            Elevated Exposure Profile
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Action Bar -->
+    <div class="action-bar">
+        <div class="action-buttons-left">
+            <a href="{{ url_for('report', assessment_id=assessment.id) }}" class="btn-action-primary">
+                📑 View Executive Report
+            </a>
+            <a href="{{ url_for('export_pdf', assessment_id=assessment.id) }}" class="btn-action-outline">
+                📥 Download PDF Report
+            </a>
+            <a href="{{ url_for('export_json', assessment_id=assessment.id) }}" class="btn-action-outline">
+                { } Export JSON
+            </a>
+        </div>
+        <div class="action-buttons-right">
+            <a href="{{ url_for('index') }}" class="btn-action-secondary">
+                ⌖ Scan Another Target
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Grid -->
+    <div class="metrics-summary-grid">
+        <div class="metric-box box-passed">
+            <span class="metric-val">{{ assessment.checks_summary.passed }}</span>
+            <span class="metric-lbl">Checks Passed</span>
+        </div>
+        <div class="metric-box box-warning">
+            <span class="metric-val">{{ assessment.checks_summary.warning }}</span>
+            <span class="metric-lbl">Warnings Observed</span>
+        </div>
+        <div class="metric-box box-failed">
+            <span class="metric-val">{{ assessment.checks_summary.failed }}</span>
+            <span class="metric-lbl">Checks Failed</span>
+        </div>
+        <div class="metric-box box-critical">
+            <span class="metric-val" id="summary-crit-count">{{ assessment.risk_summary.critical or 0 }}</span>
+            <span class="metric-lbl">Critical STRIDE Threats</span>
+        </div>
+        <div class="metric-box box-high">
+            <span class="metric-val" id="summary-high-count">{{ assessment.risk_summary.high or 0 }}</span>
+            <span class="metric-lbl">High Severity Threats</span>
+        </div>
+    </div>
+
+    <!-- Executive Summary Card -->
+    <div class="section-card">
+        <div class="section-card-header">
+            <h3>Executive Assessment Summary</h3>
+            <span class="info-pill">Rule-Based + Expert Threat Synthesizer</span>
+        </div>
+        <div class="executive-summary-content">
+            <p>{{ assessment.executive_summary | replace('\n\n', '<br><br>') | safe }}</p>
+        </div>
+    </div>
+
+    <!-- SECTION 1: PERMITTED OBSERVABLE CHECKS -->
+    <div class="section-card">
+        <div class="section-card-header flex-between">
+            <div>
+                <h3>1. Permitted Observable Security Checks</h3>
+                <p class="section-card-sub">Passive inspection of publicly observable HTTP responses, TLS configurations, and security headers</p>
+            </div>
+            <div class="filter-btn-group">
+                <button type="button" class="filter-btn active" onclick="filterChecks('all', this)">All ({{ assessment.findings|length }})</button>
+                <button type="button" class="filter-btn" onclick="filterChecks('PASS', this)">Passed ({{ assessment.checks_summary.passed }})</button>
+                <button type="button" class="filter-btn" onclick="filterChecks('ATTENTION', this)">Requiring Attention ({{ assessment.checks_summary.warning + assessment.checks_summary.failed }})</button>
+            </div>
+        </div>
+
+        <div class="findings-list">
+            {% for f in assessment.findings %}
+                <div class="finding-card finding-status-{{ f.status }}" data-status="{{ f.status }}">
+                    <div class="finding-header">
+                        <div class="finding-title-group">
+                            <span class="finding-code mono-text">{{ f.finding_code }}</span>
+                            <h4 class="finding-title">{{ f.title }}</h4>
+                            <span class="finding-category">{{ f.category }}</span>
+                        </div>
+                        <div class="finding-badges">
+                            <span class="status-badge status-{{ f.status }}">{{ f.status }}</span>
+                            <span class="severity-badge sev-{{ f.severity.lower() }}">{{ f.severity }}</span>
+                        </div>
+                    </div>
+
+                    <div class="finding-body">
+                        <p class="finding-desc">{{ f.description }}</p>
+
+                        <div class="finding-evidence-box">
+                            <span class="evidence-tag">Evidence Observed:</span>
+                            <span class="evidence-text mono-text">{{ f.evidence }}</span>
+                        </div>
+
+                        <div class="finding-remediation-box">
+                            <span class="remediation-tag">Recommended Defense:</span>
+                            <span class="remediation-text">{{ f.recommendation }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- SECTION 2: STRIDE THREAT MODELING ENGINE -->
+    <div class="section-card">
+        <div class="section-card-header">
+            <div>
+                <h3>2. STRIDE Threat Modeling & Dynamic Risk Scenarios</h3>
+                <p class="section-card-sub">
+                    Weaknesses mapped into STRIDE categories.
+                    Formula: <strong>Risk Score = Likelihood (1–5) × Impact (1–5)</strong>.
+                    You can adjust values below to model specific threat scenarios.
+                </p>
+            </div>
+            <div class="stride-legend">
+                <span class="stride-pill pill-s" title="Spoofing">S</span>
+                <span class="stride-pill pill-t" title="Tampering">T</span>
+                <span class="stride-pill pill-r" title="Repudiation">R</span>
+                <span class="stride-pill pill-i" title="Information Disclosure">I</span>
+                <span class="stride-pill pill-d" title="Denial of Service">D</span>
+                <span class="stride-pill pill-e" title="Elevation of Privilege">E</span>
+            </div>
+        </div>
+
+        {% if assessment.threat_scenarios %}
+            <div class="threats-grid">
+                {% for t in assessment.threat_scenarios %}
+                    <div class="threat-card" id="card-{{ t.threat_id }}">
+                        <div class="threat-card-top">
+                            <div class="threat-meta">
+                                <span class="threat-id mono-text">{{ t.threat_id }}</span>
+                                <span class="stride-cat-badge stride-{{ t.threat_category.lower().replace(' ', '-') }}">
+                                    {{ t.threat_category }}
+                                </span>
+                                <span class="threat-finding-ref mono-text">Ref: {{ t.finding_code }}</span>
+                            </div>
+                            <div class="threat-score-pill" id="badge-container-{{ t.threat_id }}">
+                                <span class="score-badge-val" id="score-val-{{ t.threat_id }}">{{ t.risk_score }}/25</span>
+                                <span class="severity-badge sev-{{ t.severity.lower() }}" id="sev-badge-{{ t.threat_id }}">{{ t.severity }}</span>
+                            </div>
+                        </div>
+
+                        <h4 class="threat-title">{{ t.title }}</h4>
+
+                        <!-- Attack Scenario Narrative -->
+                        <div class="threat-scenario-box">
+                            <span class="box-label">Potential Attack Scenario:</span>
+                            <p class="scenario-text">{{ t.attack_scenario }}</p>
+                        </div>
+
+                        <!-- Rationale -->
+                        <div class="threat-rationale-box">
+                            <span class="box-label">Risk Rationale:</span>
+                            <p class="rationale-text">{{ t.rationale }}</p>
+                        </div>
+
+                        <!-- Interactive Risk Tuner Box -->
+                        <div class="risk-tuner-panel">
+                            <div class="tuner-header">
+                                <span class="tuner-title">🎚️ Interactive Risk Scenario Tuner</span>
+                                <span class="tuner-formula">Risk = Likelihood × Impact</span>
+                            </div>
+
+                            <div class="tuner-controls">
+                                <div class="control-group">
+                                    <label for="likelihood-{{ t.threat_id }}">Likelihood (1 to 5):</label>
+                                    <select id="likelihood-{{ t.threat_id }}" class="tuner-select" onchange="previewRisk('{{ t.threat_id }}')">
+                                        <option value="1" {% if t.likelihood == 1 %}selected{% endif %}>1 - Rare (Isolated scenario)</option>
+                                        <option value="2" {% if t.likelihood == 2 %}selected{% endif %}>2 - Unlikely (Specific prerequisites)</option>
+                                        <option value="3" {% if t.likelihood == 3 %}selected{% endif %}>3 - Possible (Standard network conditions)</option>
+                                        <option value="4" {% if t.likelihood == 4 %}selected{% endif %}>4 - Likely (Common attack vector)</option>
+                                        <option value="5" {% if t.likelihood == 5 %}selected{% endif %}>5 - Almost Certain (Automated exploitation)</option>
+                                    </select>
+                                </div>
+
+                                <div class="control-group">
+                                    <label for="impact-{{ t.threat_id }}">Impact (1 to 5):</label>
+                                    <select id="impact-{{ t.threat_id }}" class="tuner-select" onchange="previewRisk('{{ t.threat_id }}')">
+                                        <option value="1" {% if t.impact == 1 %}selected{% endif %}>1 - Negligible (Minor telemetry)</option>
+                                        <option value="2" {% if t.impact == 2 %}selected{% endif %}>2 - Minor (Low sensitivity info)</option>
+                                        <option value="3" {% if t.impact == 3 %}selected{% endif %}>3 - Moderate (Session or UI redressing)</option>
+                                        <option value="4" {% if t.impact == 4 %}selected{% endif %}>4 - Major (Credential/Token theft)</option>
+                                        <option value="5" {% if t.impact == 5 %}selected{% endif %}>5 - Severe (Total transport compromise)</option>
+                                    </select>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="btn-save-risk"
+                                    id="save-btn-{{ t.threat_id }}"
+                                    onclick="saveRiskAdjustment({{ assessment.id }}, '{{ t.threat_id }}')"
+                                >
+                                    💾 Save Scenario
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mitigation & Verification -->
+                        <div class="threat-mitigation-box">
+                            <span class="box-label">Recommended Mitigation Strategy:</span>
+                            <p class="mitigation-text">{{ t.mitigation }}</p>
+
+                            <span class="box-label" style="margin-top: 8px;">Steps to Verify Fix:</span>
+                            <pre class="verification-steps">{{ t.verification_steps }}</pre>
+                        </div>
+
+                        <!-- Remediation Status Tracker -->
+                        {% set status_rec = assessment.mitigation_statuses.get(t.threat_id, {}) %}
+                        <div class="remediation-tracker-bar">
+                            <span class="remediation-lbl">Remediation Status:</span>
+                            <select
+                                class="status-select status-{{ (status_rec.status or 'Open').lower().replace(' ', '-') }}"
+                                id="status-{{ t.threat_id }}"
+                                onchange="saveMitigationStatus({{ assessment.id }}, '{{ t.threat_id }}', this.value)"
+                            >
+                                <option value="Open" {% if status_rec.status == 'Open' %}selected{% endif %}>⚪ Open (Unresolved)</option>
+                                <option value="In Progress" {% if status_rec.status == 'In Progress' %}selected{% endif %}>🟡 In Progress</option>
+                                <option value="Mitigated" {% if status_rec.status == 'Mitigated' %}selected{% endif %}>🟢 Mitigated (Fixed)</option>
+                                <option value="Accepted" {% if status_rec.status == 'Accepted' %}selected{% endif %}>🔵 Risk Accepted</option>
+                            </select>
+                            <span class="status-saved-msg" id="msg-{{ t.threat_id }}"></span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="all-clean-state">
+                <span class="clean-icon">🎉</span>
+                <h4>Zero Active STRIDE Threat Scenarios Mapped</h4>
+                <p>The target server passed all evaluated passive security checks. No threat scenarios met the threshold for mapping.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Educational Disclaimer Footer -->
+    <div class="disclaimer-callout">
+        <span class="disclaimer-icon">ℹ️</span>
+        <div>
+            <strong>Educational Threat Modeling Disclaimer:</strong>
+            ThreatLens AI evaluates publicly observable configurations and applies STRIDE classification to model hypothetical risks.
+            A passing score does not imply immunity against zero-days, SQL injection, logic flaws, or backend infrastructure vulnerabilities.
+            Always conduct authorized, defense-in-depth security assessments.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Filter findings table
+function filterChecks(status, btn) {
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const cards = document.querySelectorAll('.finding-card');
+    cards.forEach(card => {
+        const cardStatus = card.getAttribute('data-status');
+        if (status === 'all') {
+            card.style.display = 'block';
+        } else if (status === 'PASS') {
+            card.style.display = (cardStatus === 'PASS') ? 'block' : 'none';
+        } else if (status === 'ATTENTION') {
+            card.style.display = (cardStatus === 'WARNING' || cardStatus === 'FAIL') ? 'block' : 'none';
+        }
+    });
+}
+
+// Live client-side calculation preview before saving
+function previewRisk(threatId) {
+    const l = parseInt(document.getElementById(`likelihood-${threatId}`).value);
+    const i = parseInt(document.getElementById(`impact-${threatId}`).value);
+    const score = l * i;
+
+    let sev = "Low";
+    if (score >= 17) sev = "Critical";
+    else if (score >= 10) sev = "High";
+    else if (score >= 5) sev = "Medium";
+
+    document.getElementById(`score-val-${threatId}`).textContent = `${score}/25`;
+    const badge = document.getElementById(`sev-badge-${threatId}`);
+    badge.textContent = sev;
+    badge.className = `severity-badge sev-${sev.toLowerCase()}`;
+
+    // Mark save button as active
+    const saveBtn = document.getElementById(`save-btn-${threatId}`);
+    saveBtn.classList.add("btn-highlight");
+    saveBtn.textContent = "💾 Save Scenario *";
+}
+
+// Save risk adjustment to SQLite backend via AJAX
+function saveRiskAdjustment(assessmentId, threatId) {
+    const l = parseInt(document.getElementById(`likelihood-${threatId}`).value);
+    const i = parseInt(document.getElementById(`impact-${threatId}`).value);
+    const saveBtn = document.getElementById(`save-btn-${threatId}`);
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
+    fetch(`/api/threat/${assessmentId}/${threatId}/risk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ likelihood: l, impact: i })
+    })
+    .then(res => res.json())
+    .then(data => {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove("btn-highlight");
+        saveBtn.textContent = "✓ Saved";
+
+        setTimeout(() => {
+            saveBtn.textContent = "💾 Save Scenario";
+        }, 2000);
+
+        if (data.data && data.data.risk_summary) {
+            const summaryCrit = document.getElementById("summary-crit-count");
+            const summaryHigh = document.getElementById("summary-high-count");
+            if (summaryCrit) summaryCrit.textContent = data.data.risk_summary.critical;
+            if (summaryHigh) summaryHigh.textContent = data.data.risk_summary.high;
+        }
+    })
+    .catch(err => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Error";
+        alert("Failed to save risk score adjustment: " + err);
+    });
+}
+
+// Update mitigation workflow status via AJAX
+function saveMitigationStatus(assessmentId, threatId, newStatus) {
+    const msgSpan = document.getElementById(`msg-${threatId}`);
+    msgSpan.textContent = "Updating...";
+
+    fetch(`/api/threat/${assessmentId}/${threatId}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+        msgSpan.textContent = "✓ Status updated";
+        setTimeout(() => { msgSpan.textContent = ""; }, 2500);
+    })
+    .catch(err => {
+        msgSpan.textContent = "✗ Update failed";
+    });
+}
+</script>
+{% endblock %}

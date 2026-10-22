@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Past Security Assessments — ThreatLens AI{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Assessment History Log</h1>
+            <p class="page-subtitle">Historical archive of all website security risk assessments stored in SQLite</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('index') }}" class="btn-primary">
+                <span>⚡</span> Run New Assessment
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="filter-card">
+        <form action="{{ url_for('history') }}" method="GET" class="search-form">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search past scans by domain or URL (e.g. example.com)..."
+                    class="search-input"
+                >
+                {% if search_query %}
+                    <a href="{{ url_for('history') }}" class="btn-clear-search">Clear</a>
+                {% endif %}
+                <button type="submit" class="btn-search">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- History Table Card -->
+    <div class="table-card">
+        {% if assessments %}
+            <div class="table-responsive">
+                <table class="cyber-table">
+                    <thead>
+                        <tr>
+                            <th>Scan ID</th>
+                            <th>Target Hostname & URL</th>
+                            <th>Assessment Date</th>
+                            <th>Hygiene Score</th>
+                            <th>Threat Profile</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in assessments %}
+                            <tr>
+                                <td class="mono-text">TL-{{ "%03d"|format(item.id) }}</td>
+                                <td>
+                                    <div class="target-host-cell">
+                                        <span class="host-name">{{ item.hostname }}</span>
+                                        <span class="host-url mono-text">{{ item.target_url }}</span>
+                                    </div>
+                                </td>
+                                <td class="date-cell">{{ item.scan_timestamp[:19].replace('T', ' ') }} UTC</td>
+                                <td>
+                                    <span class="score-badge {% if item.overall_score >= 80 %}score-high{% elif item.overall_score >= 50 %}score-mid{% else %}score-low{% endif %}">
+                                        {{ item.overall_score }}/100
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="mini-risk-badges">
+                                        {% if item.risk_summary.critical %}
+                                            <span class="badge-mini badge-critical">{{ item.risk_summary.critical }} Crit</span>
+                                        {% endif %}
+                                        {% if item.risk_summary.high %}
+                                            <span class="badge-mini badge-high">{{ item.risk_summary.high }} High</span>
+                                        {% endif %}
+                                        {% if item.risk_summary.medium %}
+                                            <span class="badge-mini badge-medium">{{ item.risk_summary.medium }} Med</span>
+                                        {% endif %}
+                                        {% if item.risk_summary.low %}
+                                            <span class="badge-mini badge-low">{{ item.risk_summary.low }} Low</span>
+                                        {% endif %}
+                                        {% if not item.risk_summary.critical and not item.risk_summary.high and not item.risk_summary.medium and not item.risk_summary.low %}
+                                            <span class="badge-mini badge-pass">Clean</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="action-btn-group">
+                                        <a href="{{ url_for('results', assessment_id=item.id) }}" class="btn-action" title="View Full Results">
+                                            🔍 Results
+                                        </a>
+                                        <a href="{{ url_for('report', assessment_id=item.id) }}" class="btn-action" title="View Printable Report">
+                                            📑 Report
+                                        </a>
+                                        <button
+                                            type="button"
+                                            class="btn-action btn-danger"
+                                            onclick="confirmDelete({{ item.id }}, '{{ item.hostname }}')"
+                                            title="Delete Assessment"
+                                        >
+                                            🗑️ Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <h3>No Matching Assessments Found</h3>
+                <p>
+                    {% if search_query %}
+                        No past assessments match your query '{{ search_query }}'.
+                    {% else %}
+                        No past assessments recorded in database. Run a scan or load a sample demo!
+                    {% endif %}
+                </p>
+                <div class="empty-actions">
+                    <a href="{{ url_for('index') }}" class="btn-primary">Scan Website</a>
+                    <a href="{{ url_for('load_sample', profile='vulnerable') }}" class="btn-secondary">Load Sample Demo</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <div class="modal-icon">⚠️</div>
+        <h3 class="modal-title">Confirm Assessment Deletion</h3>
+        <p class="modal-text">
+            Are you sure you want to permanently delete assessment record for
+            <strong id="modalTargetHost" class="cyan-accent"></strong>?
+            This will remove all associated security findings and STRIDE threat models.
+        </p>
+        <form id="deleteForm" method="POST" action="">
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button type="submit" class="btn-danger-solid">Permanently Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function confirmDelete(id, host) {
+    document.getElementById("modalTargetHost").textContent = host;
+    document.getElementById("deleteForm").action = `/assessment/${id}/delete`;
+    document.getElementById("deleteModal").style.display = "flex";
+}
+
+function closeDeleteModal() {
+    document.getElementById("deleteModal").style.display = "none";
+}
+</script>
+{% endblock %}

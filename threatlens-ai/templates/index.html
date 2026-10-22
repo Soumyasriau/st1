@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}ThreatLens AI — Website Security Risk Assessment & Threat Modeling Tool{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        AI-Assisted Cybersecurity Threat Modeling & Risk Assessment
+    </div>
+    <h1 class="hero-title">
+        Audit Public Security Configurations.<br>
+        <span class="gradient-text">Map Threats with STRIDE.</span>
+    </h1>
+    <p class="hero-description">
+        ThreatLens AI performs passive, safe cybersecurity configuration assessments on authorized websites.
+        It identifies missing security controls, maps observable findings to structured STRIDE threat scenarios,
+        calculates transparent risk scores (Likelihood × Impact), and provides actionable defense recommendations.
+    </p>
+
+    <!-- Scan Form Card -->
+    <div class="scan-card">
+        <form id="scanForm" action="{{ url_for('analyze') }}" method="POST" class="scan-form">
+            <div class="input-wrapper">
+                <span class="input-icon">🌐</span>
+                <input
+                    type="text"
+                    id="urlInput"
+                    name="url"
+                    placeholder="Enter website URL (e.g., https://example.com)"
+                    required
+                    autocomplete="off"
+                    class="url-input"
+                >
+                <button type="submit" id="analyzeBtn" class="btn-primary">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-text">Analyze Website</span>
+                </button>
+            </div>
+            <div class="scan-notice">
+                <span class="notice-icon">🛡️</span>
+                <span>
+                    <strong>Authorized Assessment Only:</strong> Passive, non-intrusive HTTP checks only.
+                    Localhost, private IP ranges (RFC 1918), and cloud metadata endpoints are strictly blocked by anti-SSRF filters.
+                </span>
+            </div>
+        </form>
+
+        <!-- Live Scanning Progress Overlay (Hidden by default) -->
+        <div id="scanLoading" class="scan-loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <h3 class="loading-title">Conducting Passive Security Assessment...</h3>
+            <p id="loadingStatusText" class="loading-status">Validating target URL and resolving DNS...</p>
+            <div class="loading-steps">
+                <div class="step-item active" id="step-dns">✓ Anti-SSRF Host Resolution</div>
+                <div class="step-item" id="step-tls">⟳ TLS Handshake & Certificate Verification</div>
+                <div class="step-item" id="step-headers">⟳ HTTP Security Headers Audit</div>
+                <div class="step-item" id="step-cookies">⟳ Cookie Flags & Information Exposure Check</div>
+                <div class="step-item" id="step-stride">⟳ STRIDE Threat Model Synthesis</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Demo / Sample Mode -->
+    <div class="sample-section">
+        <div class="sample-header">
+            <span class="sample-icon">🧪</span>
+            <span class="sample-title">College Demo & Offline Evaluation Mode:</span>
+            <span class="sample-subtitle">Instant assessments without external internet access</span>
+        </div>
+        <div class="sample-cards-grid">
+            <a href="{{ url_for('load_sample', profile='vulnerable') }}" class="sample-card sample-vulnerable">
+                <div class="sample-card-badge badge-critical">Score: 22/100</div>
+                <h4>Insecure Legacy Portal</h4>
+                <p>Missing CSP, HSTS, X-Frame-Options; expired TLS certificate, exposed Apache version banners, and vulnerable session cookies.</p>
+                <span class="sample-btn">Load Vulnerable Demo →</span>
+            </a>
+
+            <a href="{{ url_for('load_sample', profile='moderate') }}" class="sample-card sample-moderate">
+                <div class="sample-card-badge badge-medium">Score: 64/100</div>
+                <h4>Moderate Web Application</h4>
+                <p>Operational HTTPS with valid TLS, but lacking CSP defense-in-depth, frame clickjacking protection, and SameSite cookie flags.</p>
+                <span class="sample-btn">Load Moderate Demo →</span>
+            </a>
+
+            <a href="{{ url_for('load_sample', profile='hardened') }}" class="sample-card sample-hardened">
+                <div class="sample-card-badge badge-pass">Score: 95/100</div>
+                <h4>Hardened Defense Portal</h4>
+                <p>Enforced HTTPS, strict CSP, HSTS preload, X-Content-Type nosniff, secure cookies, and sanitized server headers.</p>
+                <span class="sample-btn">Load Hardened Demo →</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Threat Modeling Process Workflow -->
+<section class="process-section">
+    <div class="section-header">
+        <h2 class="section-title">The 7-Stage Threat Modeling Workflow</h2>
+        <p class="section-subtitle">How ThreatLens AI turns observable website configurations into prioritized cybersecurity defenses</p>
+    </div>
+
+    <div class="workflow-grid">
+        <div class="workflow-card">
+            <div class="workflow-num">01</div>
+            <h3>Target Identification</h3>
+            <p>User supplies a target website URL. Strict input normalization and anti-SSRF address filters validate the host.</p>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-num">02</div>
+            <h3>Passive Observation</h3>
+            <p>Executes safe HTTP/TLS requests without brute force or payloads, reading public headers and certificates.</p>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-num">03</div>
+            <h3>Weakness Identification</h3>
+            <p>Evaluates transport security, TLS validity, cookie attributes, mixed content, and 6 core security headers.</p>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-num">04</div>
+            <h3>STRIDE Scenario Mapping</h3>
+            <p>Maps each weakness to STRIDE threat categories (Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Elevation of Privilege).</p>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-num">05</div>
+            <h3>Risk Estimation</h3>
+            <p>Calculates transparent Risk Score = Likelihood (1–5) × Impact (1–5), classified into Low, Medium, High, or Critical.</p>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-num">06</div>
+            <h3>Mitigation Guidance</h3>
+            <p>Generates tailored remediation recommendations and step-by-step verification checklists for developers.</p>
+        </div>
+        <div class="workflow-card">
+            <div class="workflow-num">07</div>
+            <h3>Executive Reporting</h3>
+            <p>Stores results in SQLite and provides downloadable HTML, JSON, and PDF reports for stakeholder review.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Core Features Section -->
+<section class="features-section">
+    <div class="section-header">
+        <h2 class="section-title">Security Engine Highlights</h2>
+        <p class="section-subtitle">Engineered specifically for transparent, ethical, and defensive cybersecurity analysis</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>SSRF-Immune Architecture</h3>
+            <p>Pre-resolves hostnames against RFC 1918 private subnets, loopbacks (127.0.0.1, ::1), link-local ranges, and cloud metadata endpoints (169.254.169.254). Revalidates every redirect hop.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🧩</div>
+            <h3>STRIDE Threat Matrix</h3>
+            <p>Classifies weaknesses into the industry-standard Microsoft STRIDE framework. Distinguishes hypothetical attack vectors from confirmed software vulnerabilities.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">🎚️</div>
+            <h3>Interactive Risk Tuner</h3>
+            <p>Adjust Likelihood and Impact values directly on the results screen. The engine dynamically recalculates risk scores and updates the severity matrix in real-time.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">📑</div>
+            <h3>Multi-Format Reporting</h3>
+            <p>Generate formal executive reports formatted for client presentations, printable browser views, direct ReportLab PDF export, and machine-readable JSON dumps.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const scanForm = document.getElementById("scanForm");
+    const scanLoading = document.getElementById("scanLoading");
+    const statusText = document.getElementById("loadingStatusText");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+
+    if (scanForm) {
+        scanForm.addEventListener("submit", function() {
+            scanLoading.style.display = "block";
+            analyzeBtn.disabled = true;
+            analyzeBtn.style.opacity = "0.6";
+
+            const steps = [
+                { id: "step-dns", text: "Resolving DNS & enforcing anti-SSRF protections..." },
+                { id: "step-tls", text: "Establishing TLS handshake & verifying X.509 certificate..." },
+                { id: "step-headers", text: "Inspecting HTTP security headers (CSP, HSTS, X-Frame-Options)..." },
+                { id: "step-cookies", text: "Auditing cookie security flags & information exposure banners..." },
+                { id: "step-stride", text: "Synthesizing STRIDE threat scenarios and calculating risk scores..." }
+            ];
+
+            let stepIndex = 0;
+            const interval = setInterval(function() {
+                stepIndex++;
+                if (stepIndex < steps.length) {
+                    statusText.textContent = steps[stepIndex].text;
+                    const prevStep = document.getElementById(steps[stepIndex - 1].id);
+                    const curStep = document.getElementById(steps[stepIndex].id);
+                    if (prevStep) {
+                        prevStep.classList.remove("active");
+                        prevStep.classList.add("done");
+                    }
+                    if (curStep) {
+                        curStep.classList.add("active");
+                    }
+                } else {
+                    clearInterval(interval);
+                }
+            }, 800);
+        });
+    }
+});
+</script>
+{% endblock %}

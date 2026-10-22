@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ThreatLens AI — Website Security Risk Assessment Tool{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="cyber-theme">
+    <!-- Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                <span class="brand-shield">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <circle cx="12" cy="11" r="3" fill="#00f2fe" stroke="none"/>
+                    </svg>
+                </span>
+                <span class="brand-text">ThreatLens <span class="cyan-accent">AI</span></span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    <span class="nav-icon">⌖</span> Assess Website
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">📊</span> Security Dashboard
+                </a>
+                <a href="{{ url_for('history') }}" class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">
+                    <span class="nav-icon">📜</span> Past Scans
+                </a>
+            </nav>
+
+            <div class="nav-badge">
+                <span class="pulse-dot"></span>
+                <span class="badge-label">Passive Audit Engine</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-alert flash-{{ category }}">
+                        <span class="flash-icon">
+                            {% if category == 'error' %}⚠️{% elif category == 'success' %}✓{% else %}ℹ{% endif %}
+                        </span>
+                        <span class="flash-message">{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="cyber-footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <div class="footer-brand">
+                    <span class="cyan-accent">ThreatLens AI</span> — Website Security Risk Assessment & Threat Modeling Tool
+                </div>
+                <p class="footer-disclaimer">
+                    Built for educational security risk modeling and cybersecurity coursework. Operates strictly via non-intrusive,
+                    passive HTTP configuration checks. Only assess domains you own or have explicit authorization to audit.
+                </p>
+            </div>
+            <div class="footer-right">
+                <div class="footer-tags">
+                    <span class="footer-tag">STRIDE Modeling</span>
+                    <span class="footer-tag">Anti-SSRF Protection</span>
+                    <span class="footer-tag">OWASP Best Practices</span>
+                    <span class="footer-tag">Flask & SQLite</span>
+                </div>
+                <div class="footer-copy">© {{ current_year }} ThreatLens AI. Open Academic Prototype.</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
