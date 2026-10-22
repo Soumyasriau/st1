@@ -3,8 +3,8 @@
 
 | Metadata Field | Details |
 |---|---|
-| **Student name** | Neralla Sairam Suraj |
-| **Roll number / Student Code** | STU-B33F7C |
+| **Student name** | Allamsetti Venkata Soumya Sri |
+| **Roll number / Student Code** | STU-93A9D6 |
 | **Course / Group** | Cyber Security / G17 |
 | **Platform** | SURE ProEd |
 | **Host OS** | Windows 10 / Windows 11 |

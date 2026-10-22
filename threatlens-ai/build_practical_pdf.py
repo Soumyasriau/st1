@@ -1,7 +1,7 @@
 """
-ThreatLens AI - Practical Output Report PDF Generator
-Constructs the complete 11-page academic mini-project report matching the reference practical specification,
-embedding all 10 figures, tables, and STRIDE threat analysis.
+ThreatLens AI - Practical Output Report PDF Generator (Strict 10-Page Format)
+Generates the exact 10-page academic mini-project report with student details:
+Venkata Soumya Sri Allamsetti, embedding all 10 visual evidence figures and STRIDE models.
 """
 
 import os
@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
 )
 from reportlab.pdfgen import canvas
 
@@ -40,52 +40,51 @@ class NumberedCanvas(canvas.Canvas):
         self.setFont("Helvetica", 9)
         self.setFillColor(colors.HexColor("#334155"))
         page_text = f"Page {self._pageNumber}"
-        self.drawCentredString(letter[0] / 2.0, 32, page_text)
+        self.drawCentredString(letter[0] / 2.0, 26, page_text)
         self.restoreState()
 
 
-def build_pdf():
-    # 0.5 inch margins (36 pt)
+def build_10page_pdf():
+    # 36 pt (0.5 in) margins
     doc = SimpleDocTemplate(
         OUTPUT_PDF,
         pagesize=letter,
         leftMargin=36,
         rightMargin=36,
-        topMargin=36,
-        bottomMargin=46
+        topMargin=32,
+        bottomMargin=38
     )
 
     styles = getSampleStyleSheet()
 
-    # Typography styles matching academic practical report
     h1_center = ParagraphStyle(
         'H1Center', parent=styles['Heading1'],
-        fontName='Helvetica-Bold', fontSize=14, leading=18,
-        textColor=colors.black, alignment=1, spaceAfter=8
+        fontName='Helvetica-Bold', fontSize=13, leading=16,
+        textColor=colors.black, alignment=1, spaceAfter=6
     )
 
     h1_sub = ParagraphStyle(
         'H1Sub', parent=styles['Normal'],
-        fontName='Helvetica', fontSize=10, leading=14,
-        textColor=colors.black, alignment=1, spaceAfter=10
+        fontName='Helvetica', fontSize=9.5, leading=13,
+        textColor=colors.black, alignment=1, spaceAfter=6
     )
 
     sec_title = ParagraphStyle(
         'SecTitle', parent=styles['Heading2'],
-        fontName='Helvetica-Bold', fontSize=11, leading=15,
-        textColor=colors.black, spaceBefore=6, spaceAfter=4, keepWithNext=True
+        fontName='Helvetica-Bold', fontSize=10.5, leading=14,
+        textColor=colors.black, spaceBefore=4, spaceAfter=3, keepWithNext=True
     )
 
     sub_sec_title = ParagraphStyle(
         'SubSecTitle', parent=styles['Heading3'],
-        fontName='Helvetica-Bold', fontSize=10, leading=13,
-        textColor=colors.black, spaceBefore=4, spaceAfter=3, keepWithNext=True
+        fontName='Helvetica-Bold', fontSize=9.5, leading=12,
+        textColor=colors.black, spaceBefore=3, spaceAfter=2, keepWithNext=True
     )
 
     body = ParagraphStyle(
         'BodyTxt', parent=styles['Normal'],
-        fontName='Helvetica', fontSize=8.5, leading=11.5,
-        textColor=colors.HexColor('#0f172a'), spaceAfter=4
+        fontName='Helvetica', fontSize=8, leading=11,
+        textColor=colors.HexColor('#0f172a'), spaceAfter=3
     )
 
     body_bold = ParagraphStyle(
@@ -95,18 +94,18 @@ def build_pdf():
 
     bullet_style = ParagraphStyle(
         'BulletTxt', parent=body,
-        leftIndent=14, firstLineIndent=-8, spaceAfter=2
+        leftIndent=12, firstLineIndent=-8, spaceAfter=2
     )
 
     fig_cap = ParagraphStyle(
         'FigCaption', parent=styles['Normal'],
-        fontName='Helvetica-Oblique', fontSize=8, leading=11,
-        textColor=colors.HexColor('#334155'), alignment=1, spaceBefore=3, spaceAfter=6
+        fontName='Helvetica-Oblique', fontSize=7.5, leading=10,
+        textColor=colors.HexColor('#334155'), alignment=1, spaceBefore=2, spaceAfter=4
     )
 
     cell_style = ParagraphStyle(
         'TableCell', parent=styles['Normal'],
-        fontName='Helvetica', fontSize=7.5, leading=10,
+        fontName='Helvetica', fontSize=7.5, leading=9.5,
         textColor=colors.HexColor('#0f172a')
     )
 
@@ -118,15 +117,14 @@ def build_pdf():
     story = []
 
     # =========================================================================
-    # PAGE 1: Aim, Objectives, Introduction, Background
+    # PAGE 1: Header, Metadata Table, 1. Aim, 2. Objectives, 3. Introduction
     # =========================================================================
     story.append(Paragraph("Cybersecurity Practical: Mini Projects / Practical Output", h1_sub))
     story.append(Paragraph("Mini Project 3: AI-Assisted Cybersecurity Threat Model", h1_center))
 
-    # Student metadata table
     meta_data = [
-        [Paragraph("Student name", cell_bold), Paragraph("Neralla Sairam Suraj", cell_style)],
-        [Paragraph("Roll number / Student Code", cell_bold), Paragraph("STU-B33F7C", cell_style)],
+        [Paragraph("Student name", cell_bold), Paragraph("Allamsetti Venkata Soumya Sri", cell_bold)],
+        [Paragraph("Roll number / Student Code", cell_bold), Paragraph("STU-93A9D6", cell_style)],
         [Paragraph("Course / Group", cell_bold), Paragraph("Cyber Security / G17", cell_style)],
         [Paragraph("Platform", cell_bold), Paragraph("SURE ProEd", cell_style)],
         [Paragraph("Host OS", cell_bold), Paragraph("Windows 10 / Windows 11", cell_style)],
@@ -137,11 +135,12 @@ def build_pdf():
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
         ('TOPPADDING', (0, 0), (-1, -1), 2),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
     ]))
     story.append(t_meta)
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 6))
 
     story.append(Paragraph("1. Aim", sec_title))
     story.append(Paragraph(
@@ -185,13 +184,13 @@ def build_pdf():
     ))
 
     # =========================================================================
-    # PAGE 2: Figure 1, STRIDE Table, Tools and Technologies
+    # PAGE 2: Figure 1, 4. STRIDE Table, 5. Tools and Technologies
     # =========================================================================
     story.append(PageBreak())
 
     fig1_path = os.path.join(ASSETS_DIR, "fig1_architecture.png")
     if os.path.exists(fig1_path):
-        story.append(Image(fig1_path, width=520, height=200))
+        story.append(Image(fig1_path, width=520, height=195))
         story.append(Paragraph("Figure 1: ThreatLens AI Multi-Tier System Architecture and STRIDE Boundary Diagram.", fig_cap))
 
     story.append(Paragraph("4. STRIDE Threat Modeling", sec_title))
@@ -219,7 +218,7 @@ def build_pdf():
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f1f5f9')),
     ]))
     story.append(t_stride)
-    story.append(Spacer(1, 6))
+    story.append(Spacer(1, 4))
 
     story.append(Paragraph("5. Tools and Technologies Used", sec_title))
     tools = [
@@ -236,7 +235,7 @@ def build_pdf():
         story.append(Paragraph(f"• {t}", bullet_style))
 
     # =========================================================================
-    # PAGE 3: System Config, Methodology, Figure 2, AI Prompt Intro
+    # PAGE 3: 6. Config Table, 7. Methodology, Figure 2, 8. AI Prompt
     # =========================================================================
     story.append(PageBreak())
 
@@ -275,11 +274,11 @@ def build_pdf():
     ]
     for s in steps:
         story.append(Paragraph(s, bullet_style))
-    story.append(Spacer(1, 4))
+    story.append(Spacer(1, 3))
 
     fig2_path = os.path.join(ASSETS_DIR, "fig2_dashboard.png")
     if os.path.exists(fig2_path):
-        story.append(Image(fig2_path, width=520, height=185))
+        story.append(Image(fig2_path, width=520, height=170))
         story.append(Paragraph("Figure 2: ThreatLens AI Web Dashboard showing real-time risk scoring, assessment summaries, and monitoring controls.", fig_cap))
 
     story.append(Paragraph("8. AI Prompt and AI-Assisted Analysis", sec_title))
@@ -292,13 +291,13 @@ def build_pdf():
     ))
 
     # =========================================================================
-    # PAGE 4: Figure 3, Threat 1 Table
+    # PAGE 4: Figure 3, Threat 1 Table, 9.1 Threat 1 Updated Mitigation
     # =========================================================================
     story.append(PageBreak())
 
     fig3_path = os.path.join(ASSETS_DIR, "fig3_ai_prompt.png")
     if os.path.exists(fig3_path):
-        story.append(Image(fig3_path, width=520, height=200))
+        story.append(Image(fig3_path, width=520, height=155))
         story.append(Paragraph("Figure 3: AI-assisted threat-analysis prompt supplied in the evidence archive.", fig_cap))
 
     story.append(Paragraph(
@@ -308,7 +307,6 @@ def build_pdf():
     ))
 
     story.append(Paragraph("9. Threat 1: Credential Harvesting & Transport Security Downgrade", sec_title))
-
     threat1_data = [
         [Paragraph("Affected component", cell_bold), Paragraph("Transport Layer / Socket & TLS Inspector (security_checks.py)", cell_style)],
         [Paragraph("STRIDE category", cell_bold), Paragraph("Tampering / Spoofing", cell_style)],
@@ -322,55 +320,38 @@ def build_pdf():
     t_threat1 = Table(threat1_data, colWidths=[150, 390])
     t_threat1.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
     ]))
     story.append(t_threat1)
 
+    story.append(Paragraph("9.1 Threat 1: Updated Mitigation", sec_title))
+    story.append(Paragraph(
+        "The updated mitigation recommendations expand basic keyword matching by combining syntactic transport inspection with compound scoring rules. "
+        "Under the enhanced defense in security_checks.py, if a target website fails to redirect plaintext HTTP traffic to HTTPS, "
+        "the engine assigns an immediate penalty and generates a High Severity Tampering threat record (Likelihood: 3, Impact: 4, "
+        "Risk Score: 12). If paired with an expired certificate, the score elevates to 20+ (Critical Severity). "
+        "The web interface displays exact redirect status and certificate expiration window, enabling engineers to adjust sliders dynamically.",
+        body
+    ))
+
     # =========================================================================
-    # PAGE 5: Figure 4, Section 9.1 Threat 1 Updated Mitigation
+    # PAGE 5: Figure 4, Figure 5, 10. Threat 2 Table
     # =========================================================================
     story.append(PageBreak())
 
     fig4_path = os.path.join(ASSETS_DIR, "fig4_results_threat1.png")
     if os.path.exists(fig4_path):
-        story.append(Image(fig4_path, width=520, height=220))
+        story.append(Image(fig4_path, width=520, height=170))
         story.append(Paragraph("Figure 4: Threat 1 assessment screen showing transport security warning, evidence breakdown, and safe recommendations.", fig_cap))
-
-    story.append(Paragraph("9.1 Threat 1: Updated Mitigation", sec_title))
-    story.append(Paragraph(
-        "The updated mitigation recommendations expand the original basic keyword matching. They focus on combining syntactic "
-        "transport inspection with compound scoring rules that evaluate unencrypted port 80 endpoints, short HSTS durations, "
-        "and untrusted Certificate Authority trust chains.",
-        body
-    ))
-    story.append(Paragraph(
-        "Under the enhanced defense in security_checks.py, if a target website fails to redirect plaintext HTTP traffic to HTTPS, "
-        "the engine assigns an immediate penalty and generates a High Severity Tampering threat record (Likelihood: 3, Impact: 4, "
-        "Risk Score: 12). If paired with an expired or self-signed certificate, the score elevates to 20+ (Critical Severity).",
-        body
-    ))
-    story.append(Paragraph(
-        "When an assessment runs, the system audits both port 443 and port 80. The web interface displays the exact redirect status "
-        "and certificate expiration window (listing remaining days until expiry). In the interactive results panel, security engineers "
-        "can adjust the likelihood and impact sliders to model customized corporate threat environments, recalculating the risk score "
-        "dynamically while tracking remediation workflows in SQLite.",
-        body
-    ))
-
-    # =========================================================================
-    # PAGE 6: Figure 5, Threat 2 Table
-    # =========================================================================
-    story.append(PageBreak())
 
     fig5_path = os.path.join(ASSETS_DIR, "fig5_code_threat1.png")
     if os.path.exists(fig5_path):
-        story.append(Image(fig5_path, width=520, height=190))
+        story.append(Image(fig5_path, width=520, height=140))
         story.append(Paragraph("Figure 5: Threat 1 updated mitigation recommendations and TLS inspection logic in security_checks.py.", fig_cap))
 
     story.append(Paragraph("10. Threat 2: Deceptive Script Execution & Missing Content-Security-Policy", sec_title))
-
     threat2_data = [
         [Paragraph("Affected component", cell_bold), Paragraph("Security Headers Inspector (security_checks.py)", cell_style)],
         [Paragraph("STRIDE category", cell_bold), Paragraph("Tampering / Elevation of Privilege", cell_style)],
@@ -384,24 +365,23 @@ def build_pdf():
     t_threat2 = Table(threat2_data, colWidths=[150, 390])
     t_threat2.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
     ]))
     story.append(t_threat2)
 
     # =========================================================================
-    # PAGE 7: Figure 6, Threat 3 Table
+    # PAGE 6: Figure 6, 11. Threat 3 Table, Figure 7
     # =========================================================================
     story.append(PageBreak())
 
     fig6_path = os.path.join(ASSETS_DIR, "fig6_code_threat2.png")
     if os.path.exists(fig6_path):
-        story.append(Image(fig6_path, width=520, height=190))
+        story.append(Image(fig6_path, width=520, height=140))
         story.append(Paragraph("Figure 6: Threat 2 HTTP security header audit logic and CSP defense in security_checks.py.", fig_cap))
 
     story.append(Paragraph("11. Threat 3: Clickjacking & Transparent Viewport Traps", sec_title))
-
     threat3_data = [
         [Paragraph("Affected component", cell_bold), Paragraph("Frame Protection Inspector (security_checks.py)", cell_style)],
         [Paragraph("STRIDE category", cell_bold), Paragraph("Elevation of Privilege / Tampering", cell_style)],
@@ -415,24 +395,24 @@ def build_pdf():
     t_threat3 = Table(threat3_data, colWidths=[150, 390])
     t_threat3.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
     ]))
     story.append(t_threat3)
-
-    # =========================================================================
-    # PAGE 8: Figure 7, Threat 4 Table
-    # =========================================================================
-    story.append(PageBreak())
+    story.append(Spacer(1, 4))
 
     fig7_path = os.path.join(ASSETS_DIR, "fig7_threat3_diagram.png")
     if os.path.exists(fig7_path):
-        story.append(Image(fig7_path, width=520, height=180))
+        story.append(Image(fig7_path, width=520, height=155))
         story.append(Paragraph("Figure 7: Threat 3 neutralization of invisible full-screen clickjack traps via Frame-Protection.", fig_cap))
 
-    story.append(Paragraph("12. Threat 4: Threat Intelligence & Analysis History Tampering (Anti-SSRF)", sec_title))
+    # =========================================================================
+    # PAGE 7: 12. Threat 4 Table, 12.1 Figure 8
+    # =========================================================================
+    story.append(PageBreak())
 
+    story.append(Paragraph("12. Threat 4: Threat Intelligence & Analysis History Tampering (Anti-SSRF)", sec_title))
     threat4_data = [
         [Paragraph("Affected component", cell_bold), Paragraph("Anti-SSRF URL Pre-Validator & SQLite Database (security_checks.py & database.py)", cell_style)],
         [Paragraph("STRIDE category", cell_bold), Paragraph("Tampering / Repudiation", cell_style)],
@@ -446,25 +426,25 @@ def build_pdf():
     t_threat4 = Table(threat4_data, colWidths=[150, 390])
     t_threat4.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
     ]))
     story.append(t_threat4)
-
-    # =========================================================================
-    # PAGE 9: Figure 8, Comparison Table, Human Evaluation
-    # =========================================================================
-    story.append(PageBreak())
+    story.append(Spacer(1, 4))
 
     story.append(Paragraph("12.1 Threat 4 Evidence", sub_sec_title))
     fig8_path = os.path.join(ASSETS_DIR, "fig8_history_ledger.png")
     if os.path.exists(fig8_path):
-        story.append(Image(fig8_path, width=520, height=185))
+        story.append(Image(fig8_path, width=520, height=215))
         story.append(Paragraph("Figure 8: Flask web analyzer interface showing threat metrics, assessment records, and SQLite analysis ledger.", fig_cap))
 
-    story.append(Paragraph("13. Existing Mitigations versus AI Recommendations", sec_title))
+    # =========================================================================
+    # PAGE 8: 13. Comparison Table, 14. Human Evaluation, Figure 9
+    # =========================================================================
+    story.append(PageBreak())
 
+    story.append(Paragraph("13. Existing Mitigations versus AI Recommendations", sec_title))
     comp_data = [
         [Paragraph("Threat", cell_bold), Paragraph("Existing evidence", cell_bold), Paragraph("AI-assisted recommendation", cell_bold), Paragraph("Evidence status", cell_bold)],
         [Paragraph("Transport Downgrade", cell_style), Paragraph("Port 80 redirect check (+15), TLS validity check; Score: 12", cell_style), Paragraph("HSTS preload, TLS 1.3 protocol enforcement, DNS CAA records", cell_style), Paragraph("Verified via unit tests & live socket checks", cell_style)],
@@ -497,20 +477,21 @@ def build_pdf():
         "preventing opaque AI black-box calculations.",
         body
     ))
-
-    # =========================================================================
-    # PAGE 10: Figure 9, Figure 10, Results and Discussion, Limitations
-    # =========================================================================
-    story.append(PageBreak())
+    story.append(Spacer(1, 3))
 
     fig9_path = os.path.join(ASSETS_DIR, "fig9_ai_response.png")
     if os.path.exists(fig9_path):
-        story.append(Image(fig9_path, width=520, height=140))
+        story.append(Image(fig9_path, width=520, height=170))
         story.append(Paragraph("Figure 9: AI-assisted threat analysis response including limitations and a human-review decision.", fig_cap))
+
+    # =========================================================================
+    # PAGE 9: Figure 10, 15. Results and Discussion, 16. Limitations
+    # =========================================================================
+    story.append(PageBreak())
 
     fig10_path = os.path.join(ASSETS_DIR, "fig10_pytest_execution.png")
     if os.path.exists(fig10_path):
-        story.append(Image(fig10_path, width=520, height=160))
+        story.append(Image(fig10_path, width=520, height=195))
         story.append(Paragraph("Figure 10: Automated unit test suite execution confirming 46 passing tests with zero failures.", fig_cap))
 
     story.append(Paragraph("15. Results and Discussion", sec_title))
@@ -543,7 +524,7 @@ def build_pdf():
         story.append(Paragraph(f"• {l}", bullet_style))
 
     # =========================================================================
-    # PAGE 11: Recommendations, Conclusion, References
+    # PAGE 10: 16.2 Recommendations, 17. Conclusion, 18. References
     # =========================================================================
     story.append(PageBreak())
 
@@ -583,8 +564,8 @@ def build_pdf():
         story.append(Paragraph(ref, bullet_style))
 
     doc.build(story, canvasmaker=NumberedCanvas)
-    print(f"[OK] Generated master 11-page report PDF: {OUTPUT_PDF}")
+    print(f"[OK] Master 10-page report PDF built successfully: {OUTPUT_PDF}")
 
 
 if __name__ == "__main__":
-    build_pdf()
+    build_10page_pdf()
