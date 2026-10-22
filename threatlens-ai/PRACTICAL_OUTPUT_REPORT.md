@@ -7,7 +7,7 @@
 | **Roll number / Student Code** | STU-93A9D6 |
 | **Course / Group** | Cyber Security / G17 |
 | **Platform** | SURE ProEd |
-| **Host OS** | Windows 10 / Windows 11 |
+| **Host OS** | Windows 11 |
 | **Date** | 22/10/2026 |
 
 ---

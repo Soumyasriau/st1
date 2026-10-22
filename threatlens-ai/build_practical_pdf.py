@@ -127,7 +127,7 @@ def build_10page_pdf():
         [Paragraph("Roll number / Student Code", cell_bold), Paragraph("STU-93A9D6", cell_style)],
         [Paragraph("Course / Group", cell_bold), Paragraph("Cyber Security / G17", cell_style)],
         [Paragraph("Platform", cell_bold), Paragraph("SURE ProEd", cell_style)],
-        [Paragraph("Host OS", cell_bold), Paragraph("Windows 10 / Windows 11", cell_style)],
+        [Paragraph("Host OS", cell_bold), Paragraph("Windows 11", cell_style)],
         [Paragraph("Date", cell_bold), Paragraph("22/10/2026", cell_style)]
     ]
     t_meta = Table(meta_data, colWidths=[160, 380])
