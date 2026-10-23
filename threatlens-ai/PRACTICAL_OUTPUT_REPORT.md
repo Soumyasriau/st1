@@ -262,7 +262,7 @@ Human judgment was required to decide whether each recommendation matched the th
 - Implement HMAC-SHA256 cryptographic chaining in SQLite to ensure immutable audit log integrity.
 - Establish an automated daily sync workflow for emerging CVE vulnerability feeds.
 - Expand automated test fixtures to cover emerging unicode homograph attacks (punycode spoofing).
-- Keep browser extension permissions strictly scoped to minimize endpoint attack surface.
+- Enforce strict HTTP response headers and restrict API route permissions to minimize web endpoint attack surface.
 
 ---
 

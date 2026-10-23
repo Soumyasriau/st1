@@ -405,7 +405,7 @@ def build_10page_pdf():
     fig7_path = os.path.join(ASSETS_DIR, "fig7_threat3_diagram.png")
     if os.path.exists(fig7_path):
         story.append(Image(fig7_path, width=520, height=155))
-        story.append(Paragraph("Figure 7: Threat 3 neutralization of invisible full-screen clickjack traps via Frame-Protection.", fig_cap))
+        story.append(Paragraph("Figure 7: Threat 3 neutralization of invisible full-screen clickjack traps via Frame Protection.", fig_cap))
 
     # =========================================================================
     # PAGE 7: 12. Threat 4 Table, 12.1 Figure 8
@@ -535,7 +535,7 @@ def build_10page_pdf():
         "Implement HMAC-SHA256 cryptographic chaining in SQLite to ensure immutable audit log integrity.",
         "Establish an automated daily sync workflow for emerging CVE vulnerability feeds.",
         "Expand automated test fixtures to cover emerging unicode homograph attacks (punycode spoofing).",
-        "Keep browser extension permissions strictly scoped to minimize endpoint attack surface."
+        "Enforce strict HTTP response headers and restrict API route permissions to minimize web endpoint attack surface."
     ]
     for r in recs:
         story.append(Paragraph(f"• {r}", bullet_style))
